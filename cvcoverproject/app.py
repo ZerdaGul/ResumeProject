@@ -4,16 +4,12 @@ import time
 from werkzeug.utils import secure_filename
 import openai
 import pdfplumber
-from dotenv import load_dotenv
-
-# .env dosyasındaki değişkenleri yükleyin
-load_dotenv()
 
 
 app = Flask(__name__)
 
 # Set your OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = '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'
 
 # Dosya yükleme ayarları
 UPLOAD_FOLDER = 'uploads'  # Yüklenecek dosyaların saklanacağı klasör
@@ -67,24 +63,9 @@ def process_request():
     # OpenAI API çağrısı
     try:
         prompt = (
-            "You are an expert assistant specializing in creating professional CVs and tailored cover letters for specific job applications. "
-            "Your role is to help users craft a CV and cover letter that effectively highlight their strengths and align with the job requirements. "
-            "Ensure the CV includes the following sections:\n"
-            "- **Contact Information**: Full name, phone number, email address, and LinkedIn profile (if applicable).\n"
-            "- **Professional Summary**: A concise, impactful statement summarizing the user's expertise, skills, and career goals.\n"
-            "- **Work Experience**: Detailed descriptions of relevant roles, responsibilities, achievements, and measurable results.\n"
-            "- **Education**: Academic qualifications, degrees, relevant coursework, and honors.\n"
-            "- **Skills**: A list of both technical and soft skills tailored to the job requirements.\n"
-            "- **Certifications and Trainings**: Industry-recognized certifications or additional education.\n"
-            "- **Languages**: Spoken and written languages with proficiency levels.\n"
-            "- **Projects**: Notable projects that showcase expertise and measurable impact.\n"
-            "\n"
-            "In addition, create a personalized and compelling cover letter for the specific company and job title provided by the user. The cover letter should include:\n"
-            "- **Opening Paragraph**: A strong introduction explaining the user's interest in the company and role, referencing specific details about the company.\n"
-            "- **Middle Section**: Highlights of key achievements, experiences, and skills that align with the job description and company values.\n"
-            "- **Closing Paragraph**: A call to action expressing enthusiasm for the role, a willingness to contribute to the company's success, and a request for next steps (e.g., an interview).\n"
-            "\n"
-            "Both the CV and cover letter should be professional, concise, and customized to showcase the user's strengths and alignment with the job requirements."
+            "Your task is to assist users in crafting professional resumes and cover letters "
+            "tailored to specific job positions or industries. Provide concise, clear, and impactful "
+            "suggestions, focusing on highlighting the user's skills, experiences, and achievements."
         )
         if message and file_content:
             prompt += f"\n\nUser message: {message}\nFile content: {file_content}"

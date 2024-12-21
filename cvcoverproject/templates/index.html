@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVSmart</title>
+    <style>
+        /* Genel Stil */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #343541;
+            color: #d1d5db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Ana Konteyner */
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 800px;
+            height: 95vh;
+            background-color: #40414f;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        /* Mesaj Kutusu */
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #343541;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background-color: #0da37f;
+            align-self: flex-end;
+            color: white;
+        }
+
+        .bot-message {
+            background-color: #4f4f5a;
+            align-self: flex-start;
+            color: white;
+        }
+
+        /* Giriş Alanı */
+        #input-container {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #40414f;
+            border-top: 1px solid #444654;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            background-color: #40414f;
+            color: white;
+            font-size: 16px;
+        }
+
+        #file-input {
+            margin-left: 10px;
+            color: white;
+        }
+
+        #send-button {
+            background-color: #0da37f;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        #send-button:hover {
+            background-color: #1f8e7c;
+        }
+
+        #send-button.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-container">
+        <!-- Mesaj Kutusu -->
+        <div id="chat-messages"></div>
+
+        <!-- Giriş Alanı -->
+        <div id="input-container">
+            <textarea id="user-input" placeholder="Mesajınızı yazın..." rows="1"></textarea>
+            <input type="file" id="file-input" accept=".pdf, .docx, .txt">
+            <button id="send-button" class="disabled" disabled>Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const fileInput = document.getElementById('file-input');
+
+        // Kullanıcının mesajını ve ChatGPT cevabını göster
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Her zaman en alta kaydır
+        }
+
+        // Gönder butonuna tıklama olayı
+        sendButton.addEventListener('click', async () => {
+            const message = userInput.value.trim();
+            const file = fileInput.files[0];
+
+            const formData = new FormData();
+            if (message) {
+                formData.append('message', message);
+            }
+            if (file) {
+                formData.append('file', file);
+            }
+
+            if (!message && !file) {
+                addMessage('Lütfen bir mesaj veya dosya ekleyin.', 'bot');
+                return;
+            }
+
+            try {
+                const response = await fetch('/process-request', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    addMessage(`Hata: ${data.error}`, 'bot');
+                } else {
+                    addMessage(data.response, 'bot');
+                }
+            } catch (error) {
+                addMessage('Bir hata oluştu, lütfen tekrar deneyin.', 'bot');
+            }
+            finally {
+                // Clear input fields
+                userInput.value = '';
+                fileInput.value = '';
+                sendButton.classList.remove('enabled');
+                sendButton.disabled = true;
+            }
+        });
+
+        // Enter tuşuna basıldığında mesaj gönder
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendButton.click();
+            }
+        });
+
+        // Dosya veya mesaj değişikliklerini dinle
+        function checkInputs() {
+            const message = userInput.value.trim();
+            const file = fileInput.files[0];
+
+            if (message && file) {
+                sendButton.classList.add('enabled');
+                sendButton.disabled = false;
+            }
+            else if (message) {
+                sendButton.classList.add('enabled');
+                sendButton.disabled = false;
+            }
+            else {
+                sendButton.classList.remove('enabled');
+                sendButton.disabled = true;
+            }
+        }
+
+        userInput.addEventListener('input', checkInputs);
+        fileInput.addEventListener('change', checkInputs);
+    </script>
+</body>
+
+</html>
